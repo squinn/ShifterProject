@@ -1,0 +1,16 @@
+{
+  "codename": "scifi72",
+  "ttf_path": "/assets/SciFi Movies.ttf",
+  "bin_path": "/assets\\ui_font_scifi72.bin",
+  "c_path": "/assets\\ui_font_scifi72.c",
+  "cfg_path": "/assets\\ui_font_scifi72.fcfg",
+  "size": 72,
+  "bpp": 1,
+  "letters": 0,
+  "ranges": [
+    "0x20-0x7f"
+  ],
+  "symbols": "",
+  "customparams": "--no-compress --no-prefilter",
+  "uploaded": false
+}
