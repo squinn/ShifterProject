@@ -38,6 +38,13 @@ bool isLed = true;
 #define ENCODER_B_PIN 42              // Rotary display control pin 2, DT pin
 #define SWITCH_PIN 41                 // Interrupt pin for rotary knob press
 
+enum ScreenType {
+    LOADING,
+    GEAR,
+    SETTINGS,
+    CALIBRATE
+};
+
 volatile int8_t position_tmp = -1;    // Temporary position of the rotary knob (0: clockwise, 1: counterclockwise)
 volatile int8_t currentA = 0;         // For rotary encoder state detection, current state
 volatile int8_t lastA = 0;            // For rotary encoder state detection, previous pin state
@@ -228,8 +235,10 @@ void setup() {
   xTaskCreatePinnedToCore(gyroTask, "GYRO", 2048, NULL, 1, &gyroTaskHandle, 0);
 
   Serial.println("Switching to GearScreen...");
-  _ui_screen_change(&ui_GearScreen, LV_SCR_LOAD_ANIM_FADE_ON, 200, 0, &ui_GearScreen_screen_init);
+  // _ui_screen_change(&ui_GearScreen, LV_SCR_LOAD_ANIM_FADE_ON, 200, 0, &ui_GearScreen_screen_init);
+  // _ui_screen_change(&ui_CalibrationScreen, LV_SCR_LOAD_ANIM_FADE_ON, 200, 0, &ui_CalibrationScreen_screen_init);
   showGear(0);
+  showScreen(GEAR);
 
   Serial.println("Settings completed, ready to connect to WiFi...");
   connectWiFi();
@@ -318,6 +327,23 @@ void performDoubleClickAction() {
   current_screen = lv_scr_act();
   if (current_screen == ui_GearScreen) {
     // _ui_screen_change(&ui_Screen1, LV_SCR_LOAD_ANIM_FADE_ON, 200, 0, &ui_Screen1_screen_init);
+  }
+}
+
+void showScreen(ScreenType screenType) {
+  switch(screenType) {
+    case LOADING:
+      _ui_screen_change(&ui_LoadingScreen, LV_SCR_LOAD_ANIM_FADE_ON, 200, 0, &ui_LoadingScreen_screen_init);
+      break;
+    case SETTINGS:
+      _ui_screen_change(&ui_SettingsScreen, LV_SCR_LOAD_ANIM_FADE_ON, 200, 0, &ui_SettingsScreen_screen_init);
+      break;
+    case CALIBRATE:
+      _ui_screen_change(&ui_CalibrationScreen, LV_SCR_LOAD_ANIM_FADE_ON, 200, 0, &ui_CalibrationScreen_screen_init);
+      break;
+    default:
+      _ui_screen_change(&ui_GearScreen, LV_SCR_LOAD_ANIM_FADE_ON, 200, 0, &ui_GearScreen_screen_init);
+      break;
   }
 }
 /*

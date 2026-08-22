@@ -101,6 +101,8 @@ void ui_init(void)
     lv_disp_set_theme(dispp, theme);
     ui_LoadingScreen_screen_init();
     ui_GearScreen_screen_init();
+    ui_SettingsScreen_screen_init();
+    ui_CalibrationScreen_screen_init();
     ui____initial_actions0 = lv_obj_create(NULL);
     lv_disp_load_scr(ui_LoadingScreen);
 }
@@ -109,4 +111,6 @@ void ui_destroy(void)
 {
     ui_LoadingScreen_screen_destroy();
     ui_GearScreen_screen_destroy();
+    ui_SettingsScreen_screen_destroy();
+    ui_CalibrationScreen_screen_destroy();
 }

@@ -22,6 +22,8 @@ extern "C" {
 
 #include "ui_LoadingScreen.h"
 #include "ui_GearScreen.h"
+#include "ui_SettingsScreen.h"
+#include "ui_CalibrationScreen.h"
 
 ///////////////////// VARIABLES ////////////////////
 
@@ -38,6 +40,7 @@ LV_IMG_DECLARE(ui_img_bg_futuristic_png);    // assets/bg_futuristic.png
 
 // FONTS
 LV_FONT_DECLARE(ui_font_scifi72);
+LV_FONT_DECLARE(ui_font_scifi56);
 
 // UI INIT
 void ui_init(void);
