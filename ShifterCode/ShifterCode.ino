@@ -148,7 +148,7 @@ WiFiUDP udp;
 //****************************************************SETUP****************************************************
 void setup() {
   Serial.begin(115200);
-
+  
   pinMode(POWER_LIGHT_PIN, OUTPUT);   
   digitalWrite(POWER_LIGHT_PIN, LOW); 
 
@@ -156,6 +156,13 @@ void setup() {
   digitalWrite(1, HIGH);  
   pinMode(2, OUTPUT);         // Power pin 2, output current
   digitalWrite(2, HIGH);
+  
+  // Give the BNO08x internal sensor hub time to stabilize post-brownout
+  // delay(100);
+  // recoverI2CSlow(I2C_SDA_PIN, I2C_SCL_PIN);
+
+  // Recover the I2C bus before starting Hardware Wire (so that we can communicate with the BNO08X is reset after a hard restart)
+  // recoverI2C(I2C_SDA_PIN, I2C_SCL_PIN);
 
   // Make sure the I2C bus for communicating with the BNO08X is reset after a hard restart
   // clearI2CBus();
@@ -252,6 +259,65 @@ void setup() {
 
 }
 
+void recoverI2CSlow(int sdaPin, int sclPin) {
+  Serial.println("Attempting to recover I2C...");
+  delay(100);
+
+  pinMode(sdaPin, INPUT_PULLUP);
+  pinMode(sclPin, OUTPUT_OPEN_DRAIN);
+
+  for (int i = 0; i < 9; i++) {
+    if (digitalRead(sdaPin) == HIGH) break;
+    
+    digitalWrite(sclPin, LOW);
+    delay(1); // Using 1ms delay removes hardware microsecond timing issues
+    digitalWrite(sclPin, HIGH);
+    delay(1);
+  }
+  
+  // Generate a STOP condition: SDA goes LOW then HIGH while SCL is HIGH
+  digitalWrite(sdaPin, LOW);
+  delay(10);
+  digitalWrite(sclPin, HIGH);
+  delay(10);
+  digitalWrite(sdaPin, HIGH);
+  delay(10);
+  Serial.println("Completed attempt to recover I2C.");
+}
+
+void recoverI2C(int sdaPin, int sclPin) {
+
+  Serial.println("Attempting to recover I2C...");
+  delay(100);
+
+  // Set SDA and SCL as GPIO output
+  pinMode(sdaPin, OUTPUT_OPEN_DRAIN);
+  pinMode(sclPin, OUTPUT_OPEN_DRAIN);
+  
+  digitalWrite(sdaPin, HIGH);
+  digitalWrite(sclPin, HIGH);
+  delay(10);
+
+  // If SDA is stuck LOW, clock SCL up to 9 times to free the bus
+  for (int i = 0; i < 9; i++) {
+    if (digitalRead(sdaPin) == HIGH) break; // SDA released!
+    
+    digitalWrite(sclPin, LOW);
+    delay(10);
+    digitalWrite(sclPin, HIGH);
+    delay(10);
+  }
+
+  // Generate a STOP condition: SDA goes LOW then HIGH while SCL is HIGH
+  digitalWrite(sdaPin, LOW);
+  delay(10);
+  digitalWrite(sclPin, HIGH);
+  delay(10);
+  digitalWrite(sdaPin, HIGH);
+  delay(10);
+  Serial.println("Completed attempt to recover I2C.");
+}
+
 void clearI2CBus() {
   pinMode(I2C_SDA_PIN, INPUT_PULLUP);
   pinMode(I2C_SCL_PIN, OUTPUT);
@@ -313,6 +379,17 @@ int lastStateCLK;           // Previous CLK pin state
 String currentDir = "";     // Current rotation direction string (for debugging)
 bool one_test = false;      // Prevents a single false trigger
 
+// Long-press execution function
+void performLongPressAction() {
+  // Serial.println("Long Press");
+  current_screen = lv_scr_act();
+  if (current_screen == ui_GearScreen) {
+    showScreen(SETTINGS);
+  } else {
+    showScreen(GEAR);
+  }
+}
+
 // Click to execute function
 void performClickAction() {
   // Serial.println("Click");
@@ -346,6 +423,16 @@ void showScreen(ScreenType screenType) {
       break;
   }
 }
+// Timing thresholds (milliseconds)
+const unsigned long LONG_PRESS_TIME = 3000;   // Hold time to trigger long press
+const unsigned long DOUBLE_CLICK_TIME = 250;  // Max delay between double click taps
+
+// Button tracking state
+static bool buttonPressed = false;
+static unsigned long pressStartTime = 0;
+static unsigned long lastReleaseTime = 0;
+static bool longPressHandled = false;
+
 /*
 Functionality:
   1. Read the rotation direction and steps of the rotary encoder
@@ -356,30 +443,25 @@ Functionality:
 void encTask(void *pvParameters) {
   while (1) {
 
-    // Read the current state of CLK
-    currentStateCLK = digitalRead(ENCODER_A_PIN);   // CLK: 45
+    // --- Rotary Encoder Logic ---
+    currentStateCLK = digitalRead(ENCODER_A_PIN); 
 
-    // If last and current state of CLK are different, then pulse occurred
-    // React to only 1 state change to avoid double count
-    if (currentStateCLK != lastStateCLK && currentStateCLK == 1) {      // Detect CLK pin state change (rotation), current state is HIGH (rising edge)
+    if (currentStateCLK != lastStateCLK && currentStateCLK == 1) { 
       current_screen = lv_scr_act();
-      // If the DT state is different than the CLK state then
-      // the encoder is rotating CCW so decrement
-      // Read DT pin state to determine rotation direction --- DT: 42  
-      if (digitalRead(ENCODER_B_PIN) != currentStateCLK) {          // Clockwise rotation (note: here DT and CLK states are different, CLK is HIGH, DT is LOW)
-        if (abs(last_counter - counter) > 200) {                     // Limit rotation speed: if the interval between two rotations is too short (counter difference > 10), skip
+      
+      if (digitalRead(ENCODER_B_PIN) != currentStateCLK) { 
+        if (abs(last_counter - counter) > 200) { 
           continue;
         }
-        position_tmp = 1;             // Mark as clockwise
+        position_tmp = 1; 
         if (current_screen == ui_GearScreen) {
           incrementGear(true);
         }
 
-        counter++;                // Increment counter
-        currentDir = "CW";       // Record direction (clockwise)
-      } else {                    // Counterclockwise rotation (CLK HIGH, DT also HIGH)
-        if (one_test == false) 
-        {
+        counter++; 
+        currentDir = "CW"; 
+      } else { 
+        if (one_test == false) {
           one_test = true;
           continue;
         }
@@ -387,8 +469,8 @@ void encTask(void *pvParameters) {
           incrementGear(false);
         }
 
-        position_tmp = 0;       // Mark as counterclockwise
-        counter--;              // Decrement counter
+        position_tmp = 0; 
+        counter--; 
         currentDir = "CCW";
       }
 
@@ -396,24 +478,59 @@ void encTask(void *pvParameters) {
       Serial.print(currentDir);
       Serial.print(" | Counter: ");
       Serial.println(counter);
-      last_counter = counter;     // Record last counter value (for speed limit)
+      last_counter = counter; 
     }
 
-    // Remember last CLK state
     lastStateCLK = currentStateCLK;
-    if (clickCount == 1 && millis() - lastPressTime > doubleClickTime) {
-      Serial.println("click ");
-      performClickAction();
-      clickCount = 0; 
+
+    // --- Combined Button Logic (Click, Double Click, Long Press) ---
+    // Assumes INPUT_PULLUP circuit (Button Pressed = LOW, Released = HIGH)
+    int btnState = digitalRead(SWITCH_PIN); 
+
+    if (btnState == LOW) { // Button is currently down
+      if (!buttonPressed) {
+        // Falling Edge: Button just pressed down
+        buttonPressed = true;
+        pressStartTime = millis();
+        longPressHandled = false;
+      } 
+      else if (!longPressHandled && (millis() - pressStartTime >= LONG_PRESS_TIME)) {
+        // Held past threshold -> Trigger Long Press immediately
+        Serial.println("Long press detected!");
+        performLongPressAction();
+        
+        longPressHandled = true; // Prevents re-triggering & cancels short clicks on release
+        clickCount = 0;          // Reset multi-click counter
+      }
+    } 
+    else { // Button is currently up (HIGH)
+      if (buttonPressed) {
+        // Rising Edge: Button just released
+        buttonPressed = false;
+        
+        // If it was NOT a long press, register it as a short tap
+        if (!longPressHandled) {
+          clickCount++;
+          lastReleaseTime = millis();
+        }
+      }
     }
-    if (clickCount >= 2) {
-      Serial.println("double click");
-      performDoubleClickAction();
-      clickCount = 0; 
+
+    // --- Short Click / Double Click Evaluation ---
+    // Wait until DOUBLE_CLICK_TIME has passed since last release before declaring actions
+    if (clickCount > 0 && (millis() - lastReleaseTime > DOUBLE_CLICK_TIME)) {
+      if (clickCount == 1) {
+        Serial.println("Single click detected!");
+        performClickAction();
+      } 
+      else if (clickCount >= 2) {
+        Serial.println("Double click detected!");
+        performDoubleClickAction();
+      }
+      
+      clickCount = 0; // Reset after handling
     }
-    if (clickCount > 2) {
-      clickCount = 0;
-    }
+
     vTaskDelay(pdMS_TO_TICKS(2));
   }
 }
