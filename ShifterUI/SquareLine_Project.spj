@@ -1324,6 +1324,15 @@
                 "nid": 10,
                 "strtype": "OBJECT/Name",
                 "strval": "CalibrateButton",
+                "childs": [
+                  {
+                    "nid": 15,
+                    "flags": 1048576,
+                    "strtype": "_codename/Codename",
+                    "strval": "CalibrateButton",
+                    "InheritedType": 10
+                  }
+                ],
                 "InheritedType": 10
               },
               {
@@ -2579,14 +2588,14 @@
                 "strtype": "ARC/Range",
                 "intarray": [
                   0,
-                  100
+                  600
                 ],
                 "InheritedType": 7
               },
               {
                 "nid": 1030,
                 "strtype": "ARC/Value",
-                "integer": 50,
+                "integer": 100,
                 "InheritedType": 6
               },
               {
@@ -2618,6 +2627,18 @@
                     "strtype": "_style/StyleState",
                     "strval": "DEFAULT",
                     "childs": [
+                      {
+                        "nid": 11110,
+                        "flags": 4096,
+                        "strtype": "_style/Padding",
+                        "intarray": [
+                          5,
+                          5,
+                          5,
+                          5
+                        ],
+                        "InheritedType": 7
+                      },
                       {
                         "nid": 10320,
                         "strtype": "_style/Arc_Width",
@@ -2810,18 +2831,6 @@
                       0,
                       0,
                       255
-                    ],
-                    "InheritedType": 7
-                  },
-                  {
-                    "nid": 11110,
-                    "flags": 4096,
-                    "strtype": "_style/Padding",
-                    "intarray": [
-                      8,
-                      8,
-                      8,
-                      8
                     ],
                     "InheritedType": 7
                   }
@@ -3339,7 +3348,7 @@
     }
   ],
   "selected_theme": "Default",
-  "selected_screen": "GUID71042546-322775S369485234",
+  "selected_screen": "GUID65557527-322795S165234",
   "info": {
     "name": "SquareLine_Project.spj",
     "depth": 1,
@@ -3368,7 +3377,7 @@
     "separate_screen_save": false,
     "hierarchy_state_save": false,
     "reverse_event_order": false,
-    "backup_cnt": 447,
+    "backup_cnt": 452,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "imagebytearrayprefix": "",

@@ -216,6 +216,7 @@ void setup() {
   delay(100);
 
   ui_init();
+  callbackInitialization();
 
   // Initialize LED strip (Adafruit_NeoPixel)
   // Five LEDs at the bottom of the device (for ambiance)
@@ -244,7 +245,8 @@ void setup() {
   Serial.println("Switching to GearScreen...");
   // _ui_screen_change(&ui_GearScreen, LV_SCR_LOAD_ANIM_FADE_ON, 200, 0, &ui_GearScreen_screen_init);
   // _ui_screen_change(&ui_CalibrationScreen, LV_SCR_LOAD_ANIM_FADE_ON, 200, 0, &ui_CalibrationScreen_screen_init);
-  showGear(0);
+  showShiftedGear(0);
+  showCalibrationGear(0);
   showScreen(GEAR);
 
   Serial.println("Settings completed, ready to connect to WiFi...");
@@ -257,6 +259,29 @@ void setup() {
     Serial.println(WiFi.localIP());
   }
 
+}
+
+void callbackInitialization() {
+  lv_obj_add_event_cb(ui_CalibrateButton, onCalibrateButtonClick, LV_EVENT_CLICKED, NULL);
+  lv_obj_add_event_cb(ui_SettingsExitButton, onSettingsExitButtonClick, LV_EVENT_CLICKED, NULL);
+}
+
+static void onCalibrateButtonClick(lv_event_t * e) {
+    lv_event_code_t code = lv_event_get_code(e);
+    
+    // Check if the event was a click/release inside the button area
+    if(code == LV_EVENT_CLICKED) {
+      showScreen(CALIBRATE);
+    }
+}
+
+static void onSettingsExitButtonClick(lv_event_t * e) {
+    lv_event_code_t code = lv_event_get_code(e);
+    
+    // Check if the event was a click/release inside the button area
+    if(code == LV_EVENT_CLICKED) {
+      showScreen(GEAR);
+    }
 }
 
 void recoverI2CSlow(int sdaPin, int sclPin) {
@@ -394,7 +419,8 @@ void performLongPressAction() {
 void performClickAction() {
   // Serial.println("Click");
   current_screen = lv_scr_act();
-  if (current_screen == ui_GearScreen) {
+  if (current_screen == ui_CalibrationScreen) {
+    captureGearCalibration();
   }
 }
 
@@ -455,7 +481,9 @@ void encTask(void *pvParameters) {
         }
         position_tmp = 1; 
         if (current_screen == ui_GearScreen) {
-          incrementGear(true);
+          incrementShiftedGear(true);
+        } else if(current_screen = ui_CalibrationScreen) {
+          incrementCalibrationGear(true);
         }
 
         counter++; 
@@ -466,7 +494,9 @@ void encTask(void *pvParameters) {
           continue;
         }
         if (current_screen == ui_GearScreen) {
-          incrementGear(false);
+          incrementShiftedGear(false);
+        } else if(current_screen = ui_CalibrationScreen) {
+          incrementCalibrationGear(false);
         }
 
         position_tmp = 0; 
@@ -591,23 +621,47 @@ void gyroTask(void *pvParameters) {
   }
 }
 
-int gearIndex = 0;
-void incrementGear(bool forward) {
-  if(forward && gearIndex < 5) {
-    gearIndex++;
-  } else if(!forward && gearIndex > 0) {
-    gearIndex--;
+int incrementGearIndex(bool forward, int tempIndex) {
+  if(forward && tempIndex < 5) {
+    tempIndex++;
+  } else if(!forward && tempIndex > 0) {
+    tempIndex--;
   }
-  showGear(gearIndex);
+  return tempIndex;
 }
 
-void showGear(int newGearIndex) {
-  gearIndex = newGearIndex;
+int calibrationGearIndex = 0;
+void incrementCalibrationGear(bool forward) {
+  calibrationGearIndex = incrementGearIndex(forward, calibrationGearIndex);
+  showCalibrationGear(calibrationGearIndex);
+}
+
+int shiftedGearIndex = 0;
+void incrementShiftedGear(bool forward) {
+  shiftedGearIndex = incrementGearIndex(forward, shiftedGearIndex);
+  showShiftedGear(shiftedGearIndex);
+}
+
+void showCalibrationGear(int gearIndex) {
+  calibrationGearIndex = gearIndex;
+  updateGearDisplay(calibrationGearIndex, ui_CalibrationGear, ui_CalibrationArc);
+}
+
+void showShiftedGear(int gearIndex) {
+  shiftedGearIndex = gearIndex;
+  updateGearDisplay(shiftedGearIndex, ui_GearNum, ui_GearArc);
+}
+
+void captureGearCalibration() {
+  Serial.print("Capturing calibration for gear: ");Serial.println(calibrationGearIndex);
+}
+
+void updateGearDisplay(int index, lv_obj_t * ui_text, lv_obj_t * ui_arc) {
   const char* display = "0";
   uint32_t color = 0xCBEEFF;
   uint32_t arcColor = 0x2095f6;
   int32_t arcValue = 0;
-  switch(gearIndex) {
+  switch(index) {
     case 0:
       display = "1";
       arcValue = 100;
@@ -635,12 +689,11 @@ void showGear(int newGearIndex) {
       arcValue = 600;
       break;
   }
-  lv_label_set_text(ui_GearNum, display);
-  lv_obj_set_style_text_color(ui_GearNum, lv_color_hex(color), LV_PART_MAIN);
-  // animate_label_growth_v8(ui_GearNum, 2500);
-  animate_arc_to_value(ui_GearArc, arcValue, 500);
-  lv_obj_set_style_arc_color(ui_GearArc, lv_color_hex(arcColor), LV_PART_INDICATOR | LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_color(ui_GearArc, lv_color_hex(arcColor), LV_PART_KNOB | LV_STATE_DEFAULT);
+  lv_label_set_text(ui_text, display);
+  lv_obj_set_style_text_color(ui_text, lv_color_hex(color), LV_PART_MAIN);
+  animate_arc_to_value(ui_arc, arcValue, 500);
+  // lv_obj_set_style_arc_color(ui_arc, lv_color_hex(arcColor), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+  // lv_obj_set_style_bg_color(ui_arc, lv_color_hex(arcColor), LV_PART_KNOB | LV_STATE_DEFAULT);
 }
 
 void animate_arc_to_value(lv_obj_t * arc, int32_t target_value, uint32_t duration_ms) {

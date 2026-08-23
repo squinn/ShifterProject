@@ -19,6 +19,7 @@ extern lv_obj_t * ui_CalibrateLabel;
 extern lv_obj_t * ui_SettingsExitButton;
 extern lv_obj_t * ui_SettingsExitLabel;
 // CUSTOM VARIABLES
+extern lv_obj_t * uic_CalibrateButton;
 
 #ifdef __cplusplus
 } /*extern "C"*/

@@ -5,6 +5,7 @@
 
 #include "ui.h"
 
+lv_obj_t * uic_CalibrateButton;
 lv_obj_t * ui_SettingsScreen = NULL;
 lv_obj_t * ui_CalibrateButton = NULL;
 lv_obj_t * ui_CalibrateLabel = NULL;
@@ -66,6 +67,8 @@ void ui_SettingsScreen_screen_init(void)
     lv_obj_set_style_text_color(ui_SettingsExitLabel, lv_color_hex(0x09C7FF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_SettingsExitLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    uic_CalibrateButton = ui_CalibrateButton;
+
 }
 
 void ui_SettingsScreen_screen_destroy(void)
@@ -74,6 +77,7 @@ void ui_SettingsScreen_screen_destroy(void)
 
     // NULL screen variables
     ui_SettingsScreen = NULL;
+    uic_CalibrateButton = NULL;
     ui_CalibrateButton = NULL;
     ui_CalibrateLabel = NULL;
     ui_SettingsExitButton = NULL;
