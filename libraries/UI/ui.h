@@ -37,6 +37,8 @@ extern lv_obj_t * ui____initial_actions0;
 LV_IMG_DECLARE(ui_img_power_on_progress_60px_png);    // assets/power_on_progress_60px.png
 LV_IMG_DECLARE(ui_img_power_on_light_400_250707_png);    // assets/power_on_light_400_250707.png
 LV_IMG_DECLARE(ui_img_bg_futuristic_png);    // assets/bg_futuristic.png
+LV_IMG_DECLARE(ui_img_power_on_progress_02_png);    // assets/power_on_progress_02.png
+LV_IMG_DECLARE(ui_img_washing_select_dot_png);    // assets/washing_select_dot.png
 
 // FONTS
 LV_FONT_DECLARE(ui_font_scifi72);

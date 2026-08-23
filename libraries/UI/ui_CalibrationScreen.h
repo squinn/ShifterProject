@@ -17,6 +17,9 @@ extern lv_obj_t * ui_CalibrationScreen;
 extern lv_obj_t * ui_CalibrationText;
 extern lv_obj_t * ui_CalibrationGear;
 extern lv_obj_t * ui_CalibrationArc;
+extern lv_obj_t * ui_BubbleDotCircle;
+extern lv_obj_t * ui_BubbleContainer;
+extern lv_obj_t * ui_BubbleDotImage;
 // CUSTOM VARIABLES
 
 #ifdef __cplusplus

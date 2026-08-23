@@ -10,6 +10,8 @@ SET(SOURCES ui_comp_cpn_img0rb0.c
     ui_img_power_on_progress_60px_png.c
     ui_img_power_on_light_400_250707_png.c
     ui_img_bg_futuristic_png.c
+    ui_img_power_on_progress_02_png.c
+    ui_img_washing_select_dot_png.c
     fonts/ui_font_scifi72.c
     fonts/ui_font_scifi56.c)
 

@@ -11,6 +11,7 @@
 
 #include "CST816D.h"      // Touch driver file
 #include "ui.h"           // All LVGL interfaces designed, indexed by this
+#include <math.h>
 
 // I2C pins for the touch screen
 #define TP_I2C_SDA_PIN 6
@@ -583,6 +584,7 @@ void enableReports() {
 */
 void gyroTask(void *pvParameters) {
   while (1) {
+    int delay = 500;
     if (bno08x.wasReset()) {
         Serial.println("Sensor reset detected! Re-enabling reports...");
         enableReports();
@@ -609,16 +611,67 @@ void gyroTask(void *pvParameters) {
           break;
 
         case SH2_GAME_ROTATION_VECTOR:
-          Serial.print("Game Quat R: "); Serial.print(sensorValue.un.gameRotationVector.real);
-          Serial.print(" I: "); Serial.print(sensorValue.un.gameRotationVector.i);
-          Serial.print(" J: "); Serial.print(sensorValue.un.gameRotationVector.j);
-          Serial.print(" K: "); Serial.println(sensorValue.un.gameRotationVector.k);
+          
+          current_screen = lv_scr_act();
+          
+          if (current_screen == ui_CalibrationScreen) {
+            updateCalibrationBubblePosition(&sensorValue);
+            delay = 25;
+          } else {
+            Serial.print("Game Quat R: "); Serial.print(sensorValue.un.gameRotationVector.real);
+            Serial.print(" I: "); Serial.print(sensorValue.un.gameRotationVector.i);
+            Serial.print(" J: "); Serial.print(sensorValue.un.gameRotationVector.j);
+            Serial.print(" K: "); Serial.println(sensorValue.un.gameRotationVector.k);
+          }
           break;          
       }
     }
     
-    vTaskDelay(pdMS_TO_TICKS(500));
+    vTaskDelay(pdMS_TO_TICKS(delay));
   }
+}
+
+// Max tilt angle (in degrees) that corresponds to the edge of the level container
+#define MAX_TILT_ANGLE 15.0f
+
+void updateCalibrationBubblePosition(const sh2_SensorValue_t * sensorVal) {
+    // 1. Extract quaternion components (all floats)
+    float q_i    = sensorVal->un.gameRotationVector.i;
+    float q_j    = sensorVal->un.gameRotationVector.j;
+    float q_k    = sensorVal->un.gameRotationVector.k;
+    float q_real = sensorVal->un.gameRotationVector.real;
+
+    // 2. Convert Quaternion to Roll and Pitch (in radians)
+    // Roll (rotation around X-axis -> side-to-side tilt)
+    float sinr_cosp = 2.0f * (q_real * q_i + q_j * q_k);
+    float cosr_cosp = 1.0f - 2.0f * (q_i * q_i + q_j * q_j);
+    float roll_rad  = atan2f(sinr_cosp, cosr_cosp);
+
+    // Pitch (rotation around Y-axis -> forward/backward tilt)
+    float sinp      = 2.0f * (q_real * q_j - q_k * q_i);
+    float pitch_rad;
+    if (fabsf(sinp) >= 1.0f) {
+        pitch_rad = copysignf(M_PI / 2.0f, sinp); // Use 90 degrees if out of range
+    } else {
+        pitch_rad = asinf(sinp);
+    }
+
+    // 3. Convert radians to degrees
+    float roll_deg  = roll_rad  * (180.0f / M_PI);
+    float pitch_deg = pitch_rad * (180.0f / M_PI);
+
+    // 4. Constrain tilt angles to the configured max angle range
+    roll_deg  = fminf(fmaxf(roll_deg,  -MAX_TILT_ANGLE), MAX_TILT_ANGLE);
+    pitch_deg = fminf(fmaxf(pitch_deg, -MAX_TILT_ANGLE), MAX_TILT_ANGLE);
+
+    // 5. Map degrees [-MAX_TILT_ANGLE, +MAX_TILT_ANGLE] to percentage offsets [-50%, +50%]
+    // At 0 deg, offset is 0% (centered). At max tilt, offset is +50% or -50%.
+    float pct_x = (roll_deg  / MAX_TILT_ANGLE) * 50.0f;
+    float pct_y = (pitch_deg / MAX_TILT_ANGLE) * 50.0f;
+
+    // 6. Align image to CENTER of parent container and apply percentage offsets
+    // Note: Cast floats to int for lv_pct()
+    lv_obj_align(ui_BubbleDotImage, LV_ALIGN_CENTER, lv_pct((int)pct_x), lv_pct((int)pct_y));
 }
 
 int incrementGearIndex(bool forward, int tempIndex) {
@@ -644,19 +697,19 @@ void incrementShiftedGear(bool forward) {
 
 void showCalibrationGear(int gearIndex) {
   calibrationGearIndex = gearIndex;
-  updateGearDisplay(calibrationGearIndex, ui_CalibrationGear, ui_CalibrationArc);
+  updateGearDisplay(calibrationGearIndex, ui_CalibrationGear, ui_CalibrationArc, 0xCBEEFF);
 }
 
 void showShiftedGear(int gearIndex) {
   shiftedGearIndex = gearIndex;
-  updateGearDisplay(shiftedGearIndex, ui_GearNum, ui_GearArc);
+  updateGearDisplay(shiftedGearIndex, ui_GearNum, ui_GearArc, 0xE69D3C);
 }
 
 void captureGearCalibration() {
   Serial.print("Capturing calibration for gear: ");Serial.println(calibrationGearIndex);
 }
 
-void updateGearDisplay(int index, lv_obj_t * ui_text, lv_obj_t * ui_arc) {
+void updateGearDisplay(int index, lv_obj_t * ui_text, lv_obj_t * ui_arc, uint32_t reverseColor) {
   const char* display = "0";
   uint32_t color = 0xCBEEFF;
   uint32_t arcColor = 0x2095f6;
@@ -684,7 +737,7 @@ void updateGearDisplay(int index, lv_obj_t * ui_text, lv_obj_t * ui_arc) {
       break;
     case 5:
       display = "R";
-      color = 0xE69D3C;
+      color = reverseColor;
       arcColor = 0xE69D3C;
       arcValue = 600;
       break;
