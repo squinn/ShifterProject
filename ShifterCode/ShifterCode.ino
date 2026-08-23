@@ -667,7 +667,18 @@ void updateCalibrationBubblePosition(const sh2_SensorValue_t * sensorVal) {
     // 5. Map degrees [-MAX_TILT_ANGLE, +MAX_TILT_ANGLE] to percentage offsets [-50%, +50%]
     // At 0 deg, offset is 0% (centered). At max tilt, offset is +50% or -50%.
     float pct_x = (roll_deg  / MAX_TILT_ANGLE) * 50.0f;
-    float pct_y = (pitch_deg / MAX_TILT_ANGLE) * 50.0f;
+    float pct_y = -(pitch_deg / MAX_TILT_ANGLE) * 50.0f;
+
+    // 6. Circular Clamping: Compute radial distance percentage
+    float distance = sqrtf(pct_x * pct_x + pct_y * pct_y);
+    float max_radius_pct = 50.0f; // 50% radius reaches the container boundary
+
+    // If total offset exceeds maximum radius, scale down (X, Y) proportionally
+    if (distance > max_radius_pct) {
+        float scale = max_radius_pct / distance;
+        pct_x *= scale;
+        pct_y *= scale;
+    }
 
     // 6. Align image to CENTER of parent container and apply percentage offsets
     // Note: Cast floats to int for lv_pct()
@@ -707,6 +718,7 @@ void showShiftedGear(int gearIndex) {
 
 void captureGearCalibration() {
   Serial.print("Capturing calibration for gear: ");Serial.println(calibrationGearIndex);
+  set_temp_label_state(ui_CalibrationText, "Gear Calibrated!", "Shift to Gear:", lv_palette_main(LV_PALETTE_ORANGE), lv_color_hex(0x26D000), 2000);
 }
 
 void updateGearDisplay(int index, lv_obj_t * ui_text, lv_obj_t * ui_arc, uint32_t reverseColor) {
@@ -790,6 +802,70 @@ void animate_label_growth_v8(lv_obj_t * label, uint32_t duration_ms) {
     lv_anim_set_path_cb(&a, lv_anim_path_overshoot);
 
     lv_anim_start(&a);
+}
+
+// Struct to hold state for the timer callback
+typedef struct {
+    lv_obj_t * label;
+    char original_text[64];
+    lv_color_t original_color;
+} temp_text_data_t;
+
+// Timer callback that restores original text and color after 3 seconds
+static void restore_label_cb(lv_timer_t * timer) {
+    temp_text_data_t * data = (temp_text_data_t *)timer->user_data;
+
+    if (lv_obj_is_valid(data->label)) {
+        // Restore original text
+        lv_label_set_text(data->label, data->original_text);
+
+        // Restore original text color
+        lv_obj_set_style_text_color(data->label, data->original_color, LV_PART_MAIN);
+    }
+
+    // Clean up memory and delete timer
+    free(data);
+    lv_timer_del(timer);
+}
+
+/**
+ * @brief Temporarily updates a label's text and color, animating the color change,
+ *        and reverts back after a specified duration.
+ * 
+ * @param label        Pointer to the LVGL label object.
+ * @param temp_text    The new temporary string to display.
+ * @param temp_color   The target color (e.g., lv_palette_main(LV_PALETTE_RED) or lv_color_hex(0xFF0000)).
+ * @param duration_ms  Time in milliseconds before reverting (e.g., 3000 for 3 seconds).
+ */
+void set_temp_label_state(lv_obj_t * label, const char * temp_text, const char * final_text, lv_color_t temp_color, lv_color_t final_color, uint32_t duration_ms) {
+    if (label == NULL || temp_text == NULL) return;
+
+    // 1. Allocate memory to preserve original state
+    temp_text_data_t * data = (temp_text_data_t *)malloc(sizeof(temp_text_data_t));
+    if (data == NULL) return;
+
+    data->label = label;
+    
+    // Save current text and color
+    strncpy(data->original_text, final_text, sizeof(data->original_text) - 1);
+    data->original_text[sizeof(data->original_text) - 1] = '\0';
+    data->original_color = final_color;
+
+    // 2. Enable a smooth color transition style (250ms fade)
+    static lv_style_transition_dsc_t trans_dsc;
+    static const lv_style_prop_t props[] = {LV_STYLE_TEXT_COLOR, LV_STYLE_PROP_INV};
+    
+    // Initialize transition descriptor: 250ms duration, 0ms delay, linear path
+    lv_style_transition_dsc_init(&trans_dsc, props, lv_anim_path_linear, 1000, 0, NULL);
+    lv_obj_set_style_transition(label, &trans_dsc, LV_PART_MAIN);
+
+    // 3. Apply new temporary text and color (triggers smooth color transition)
+    lv_label_set_text(label, temp_text);
+    lv_obj_set_style_text_color(label, temp_color, LV_PART_MAIN);
+
+    // 4. Create a 1-shot timer to revert back after specified milliseconds
+    lv_timer_t * timer = lv_timer_create(restore_label_cb, duration_ms, data);
+    lv_timer_set_repeat_count(timer, 1);
 }
 
 /* Display flushing */
