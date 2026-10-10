@@ -43,6 +43,7 @@ LV_IMG_DECLARE(ui_img_washing_select_dot_png);    // assets/washing_select_dot.p
 // FONTS
 LV_FONT_DECLARE(ui_font_scifi72);
 LV_FONT_DECLARE(ui_font_scifi56);
+LV_FONT_DECLARE(ui_font_scifi48);
 
 // UI INIT
 void ui_init(void);

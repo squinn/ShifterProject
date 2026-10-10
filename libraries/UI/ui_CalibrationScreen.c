@@ -27,7 +27,7 @@ void ui_CalibrationScreen_screen_init(void)
     lv_obj_set_width(ui_CalibrationText, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_CalibrationText, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_CalibrationText, 0);
-    lv_obj_set_y(ui_CalibrationText, -60);
+    lv_obj_set_y(ui_CalibrationText, -62);
     lv_obj_set_align(ui_CalibrationText, LV_ALIGN_CENTER);
     lv_label_set_text(ui_CalibrationText, "Shift To Gear:");
     lv_obj_set_style_text_color(ui_CalibrationText, lv_color_hex(0x26D000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -41,7 +41,7 @@ void ui_CalibrationScreen_screen_init(void)
     lv_label_set_text(ui_CalibrationGear, "3");
     lv_obj_set_style_text_color(ui_CalibrationGear, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_CalibrationGear, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_CalibrationGear, &ui_font_scifi56, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_CalibrationGear, &ui_font_scifi48, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_CalibrationArc = lv_arc_create(ui_CalibrationScreen);
     lv_obj_set_width(ui_CalibrationArc, lv_pct(100));
@@ -51,10 +51,10 @@ void ui_CalibrationScreen_screen_init(void)
     lv_obj_set_flex_align(ui_CalibrationArc, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     lv_arc_set_range(ui_CalibrationArc, 0, 600);
     lv_arc_set_value(ui_CalibrationArc, 100);
-    lv_obj_set_style_pad_left(ui_CalibrationArc, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_CalibrationArc, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_CalibrationArc, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_CalibrationArc, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_CalibrationArc, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_CalibrationArc, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_CalibrationArc, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_CalibrationArc, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_arc_width(ui_CalibrationArc, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_set_style_arc_color(ui_CalibrationArc, lv_color_hex(0x198900), LV_PART_INDICATOR | LV_STATE_DEFAULT);
@@ -69,7 +69,7 @@ void ui_CalibrationScreen_screen_init(void)
     lv_obj_set_width(ui_BubbleDotCircle, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_BubbleDotCircle, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_BubbleDotCircle, 0);
-    lv_obj_set_y(ui_BubbleDotCircle, 82);
+    lv_obj_set_y(ui_BubbleDotCircle, 84);
     lv_obj_set_align(ui_BubbleDotCircle, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_BubbleDotCircle, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_BubbleDotCircle, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
@@ -79,7 +79,7 @@ void ui_CalibrationScreen_screen_init(void)
     lv_obj_set_width(ui_BubbleContainer, 50);
     lv_obj_set_height(ui_BubbleContainer, 50);
     lv_obj_set_x(ui_BubbleContainer, 0);
-    lv_obj_set_y(ui_BubbleContainer, 82);
+    lv_obj_set_y(ui_BubbleContainer, 84);
     lv_obj_set_align(ui_BubbleContainer, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_BubbleContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 

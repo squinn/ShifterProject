@@ -2166,7 +2166,7 @@
                 "strtype": "OBJECT/Position",
                 "intarray": [
                   0,
-                  -64
+                  -62
                 ],
                 "InheritedType": 7
               },
@@ -2457,7 +2457,7 @@
                       {
                         "nid": 10450,
                         "strtype": "_style/Text_Font",
-                        "strval": "scifi56",
+                        "strval": "scifi48",
                         "InheritedType": 3
                       }
                     ],
@@ -2632,10 +2632,10 @@
                         "flags": 4096,
                         "strtype": "_style/Padding",
                         "intarray": [
-                          5,
-                          5,
-                          5,
-                          5
+                          4,
+                          4,
+                          4,
+                          4
                         ],
                         "InheritedType": 7
                       },
@@ -2759,7 +2759,7 @@
                 "strtype": "OBJECT/Position",
                 "intarray": [
                   0,
-                  90
+                  84
                 ],
                 "InheritedType": 7
               },
@@ -3093,7 +3093,7 @@
                 "strtype": "OBJECT/Position",
                 "intarray": [
                   0,
-                  90
+                  84
                 ],
                 "InheritedType": 7
               },
@@ -3847,7 +3847,7 @@
     "separate_screen_save": false,
     "hierarchy_state_save": false,
     "reverse_event_order": false,
-    "backup_cnt": 457,
+    "backup_cnt": 458,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "imagebytearrayprefix": "",
